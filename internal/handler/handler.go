@@ -26,6 +26,7 @@ func NewHadler(service *service.Service, logger *logrus.Logger) *Handler {
 
 func (h *Handler) InitRouters() *gin.Engine {
 	router := gin.New()
+	router.Use(h.Logger())
 
 	// Auth group
 	auth := router.Group("/auth")
@@ -35,7 +36,7 @@ func (h *Handler) InitRouters() *gin.Engine {
 	}
 
 	// API v1 group
-	v1 := router.Group("/api/v1")
+	v1 := router.Group("/api/v1", h.authMiddleware())
 	{
 		lists := v1.Group("/lists")
 		{

@@ -9,6 +9,7 @@ type Auth interface {
 	CreateUser(user models.User) (int, error)
 	GetUser(email, password string) (models.User, error)
 	GenerateToken(email, password string) (string, error)
+	ParseToken(tokenString string) (int, error)
 }
 
 type ToDoList interface {

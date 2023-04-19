@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"time"
 
@@ -22,8 +23,7 @@ type AuthService struct {
 
 type customClaims struct {
 	jwt.StandardClaims
-	UserID    int
-	UserEmail string
+	UserID int
 }
 
 func NewAuthService(repo *repository.Repository) *AuthService {
@@ -58,8 +58,29 @@ func (s *AuthService) GenerateToken(email, password string) (string, error) {
 			IssuedAt:  time.Now().Unix(),
 		},
 		user.ID,
-		user.Email,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(signingKey))
+}
+
+func (s *AuthService) ParseToken(tokenString string) (int, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &customClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(signingKey), nil
+	})
+	if err != nil {
+		fmt.Println("here")
+		return 0, err
+	}
+	if !token.Valid {
+		return 0, errors.New("token is not valid")
+	}
+	claims, ok := token.Claims.(*customClaims)
+	if !ok {
+		return 0, errors.New("token is not valid claim type")
+	}
+	return claims.UserID, nil
 }
