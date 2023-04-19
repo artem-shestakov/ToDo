@@ -27,3 +27,10 @@ func (r *AuthRepository) CreateUser(user models.User) (int, error) {
 	}
 	return user_id, nil
 }
+
+func (r *AuthRepository) GetUser(email, password string) (models.User, error) {
+	var user models.User
+	query := fmt.Sprintf("SELECT * FROM %s WHERE email=$1 AND password=$2", userTable)
+	err := r.db.Get(&user, query, email, password)
+	return user, err
+}
