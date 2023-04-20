@@ -7,7 +7,6 @@ import (
 
 	"github.com/artem-shestakov/to-do/internal/models"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type loginInput struct {
@@ -18,19 +17,14 @@ type loginInput struct {
 func (h *Handler) SignUp(c *gin.Context) {
 	var json models.User
 	if err := c.ShouldBindJSON(&json); err != nil {
-		responseError(c, http.StatusBadRequest, err)
-		h.logger.WithFields(logrus.Fields{
-			"err": err.Error(),
-		}).Errorf("JSON parsing error")
+		h.responseError(c, http.StatusBadRequest, err, "JSON parsing error")
+
 		return
 	}
 
 	id, err := h.service.Auth.CreateUser(json)
 	if err != nil {
-		responseError(c, http.StatusInternalServerError, err)
-		h.logger.WithFields(logrus.Fields{
-			"err": err.Error(),
-		}).Errorf("User is not created")
+		h.responseError(c, http.StatusInternalServerError, err, "User is not created")
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
@@ -42,26 +36,17 @@ func (h *Handler) SignUp(c *gin.Context) {
 func (h *Handler) Login(c *gin.Context) {
 	var login loginInput
 	if err := c.ShouldBindJSON(&login); err != nil {
-		responseError(c, http.StatusBadRequest, err)
-		h.logger.WithFields(logrus.Fields{
-			"err": err.Error(),
-		}).Errorf("JSON parsing error")
+		h.responseError(c, http.StatusBadRequest, err, "JSON parsing error")
 		return
 	}
 
 	token, err := h.service.Auth.GenerateToken(login.Email, login.Password)
 	if err != nil && err == sql.ErrNoRows {
 		err = fmt.Errorf("user %s not found or email/password incorrect", login.Email)
-		responseError(c, http.StatusUnauthorized, err)
-		h.logger.WithFields(logrus.Fields{
-			"err": err.Error(),
-		}).Errorf("Can't authoririze user: %s", login.Email)
+		h.responseError(c, http.StatusUnauthorized, err, fmt.Sprintf("Can't authoririze user: %s", login.Email))
 		return
 	} else if err != nil {
-		responseError(c, http.StatusUnauthorized, err)
-		h.logger.WithFields(logrus.Fields{
-			"err": err.Error(),
-		}).Errorf("Can't authoririze user: %s", login.Email)
+		h.responseError(c, http.StatusUnauthorized, err, fmt.Sprintf("Can't authoririze user: %s", login.Email))
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{

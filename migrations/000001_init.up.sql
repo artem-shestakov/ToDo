@@ -10,7 +10,7 @@ CREATE TABLE users
 CREATE TABLE lists
 (
     id serial PRIMARY KEY,
-    title varchar(255) NOT NULL,
+    title varchar(255) NOT NULL UNIQUE,
     description text
 );
 
@@ -24,7 +24,7 @@ CREATE TABLE users_lists
 CREATE TABLE tasks
 (
     id serial PRIMARY KEY,
-    title varchar(255) NOT NULL,
+    title varchar(255) NOT NULL UNIQUE,
     description text,
     is_done boolean NOT NULL DEFAULT false,
     list_id integer,

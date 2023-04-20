@@ -72,7 +72,6 @@ func (s *AuthService) ParseToken(tokenString string) (int, error) {
 		return []byte(signingKey), nil
 	})
 	if err != nil {
-		fmt.Println("here")
 		return 0, err
 	}
 	if !token.Valid {

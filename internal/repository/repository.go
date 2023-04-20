@@ -6,7 +6,9 @@ import (
 )
 
 const (
-	userTable = "users"
+	userTable      = "users"
+	listsTable     = "lists"
+	usersListTable = "users_lists"
 )
 
 type Auth interface {
@@ -15,6 +17,11 @@ type Auth interface {
 }
 
 type ToDoList interface {
+	Create(userId int, list models.ToDoList) (int, error)
+	GetLists(userId int) ([]models.ToDoList, error)
+	GetListById(userId, listId int) (models.ToDoList, error)
+	UpdateList(userId, listId int, list models.UpdateToDoList) error
+	DeleteList(userId, listId int) error
 }
 
 type ToDoTask interface {
@@ -28,6 +35,7 @@ type Repository struct {
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
-		Auth: NewAuthRepository(db),
+		Auth:     NewAuthRepository(db),
+		ToDoList: NewListRepository(db),
 	}
 }

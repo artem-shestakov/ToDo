@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -16,7 +15,8 @@ func (h *Handler) authMiddleware() gin.HandlerFunc {
 		// Get Authorization token
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			responseError(c, http.StatusUnauthorized, fmt.Errorf("authorization header was not found in request"))
+			err := errors.New("authorization header was not found in request")
+			h.responseError(c, http.StatusUnauthorized, err, "Header Authorization is not found")
 			c.Abort()
 			return
 		}
@@ -24,7 +24,8 @@ func (h *Handler) authMiddleware() gin.HandlerFunc {
 		// Get token
 		bearerToken := strings.Split(authHeader, " ")
 		if len(bearerToken) != 2 {
-			responseError(c, http.StatusUnauthorized, fmt.Errorf("check authorization Bearer token format"))
+			err := errors.New("incorrect Bearer token format")
+			h.responseError(c, http.StatusUnauthorized, err, "Can't get Bearer token from header")
 			c.Abort()
 			return
 		}
@@ -32,7 +33,7 @@ func (h *Handler) authMiddleware() gin.HandlerFunc {
 		// Parse token
 		userID, err := h.service.Auth.ParseToken(bearerToken[1])
 		if err != nil {
-			responseError(c, http.StatusUnauthorized, err)
+			h.responseError(c, http.StatusUnauthorized, err, "Token parsing error")
 			c.Abort()
 			return
 		}
@@ -57,22 +58,15 @@ func (h *Handler) Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()
 
-		// Set example variable
-		c.Set("example", "12345")
-
-		// before request
-
 		c.Next()
 
-		// after request
 		latency := time.Since(t)
-
-		// access the status we are sending
 		status := c.Writer.Status()
 
 		h.logger.WithFields(logrus.Fields{
 			"code":    status,
 			"path":    c.Request.RequestURI,
+			"method":  c.Request.Method,
 			"latency": latency,
 		}).Info()
 	}

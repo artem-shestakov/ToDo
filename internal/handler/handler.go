@@ -11,12 +11,6 @@ type Handler struct {
 	logger  *logrus.Logger
 }
 
-func responseError(c *gin.Context, code int, err error) {
-	c.JSON(code, gin.H{
-		"error": err.Error(),
-	})
-}
-
 func NewHadler(service *service.Service, logger *logrus.Logger) *Handler {
 	return &Handler{
 		service: service,
@@ -58,4 +52,17 @@ func (h *Handler) InitRouters() *gin.Engine {
 	}
 
 	return router
+}
+
+func (h *Handler) responseError(c *gin.Context, code int, err error, detail string) {
+	// Log
+	h.logger.WithFields(logrus.Fields{
+		"err": err.Error(),
+	}).Errorf(detail)
+
+	// Error response
+	c.JSON(code, gin.H{
+		"error":  err.Error(),
+		"detail": detail,
+	})
 }
