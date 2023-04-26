@@ -27,6 +27,10 @@ func (s *ListService) GetListById(userId, listId int) (models.ToDoList, error) {
 	return s.repo.ToDoList.GetListById(userId, listId)
 }
 
+func (s *ListService) GetListByTitle(userId int, listTitle string) (models.ToDoList, error) {
+	return s.repo.ToDoList.GetListByTitle(userId, listTitle)
+}
+
 func (s *ListService) UpdateList(userId, listId int, list models.UpdateToDoList) error {
 	if err := list.Validate(); err != nil {
 		return err
