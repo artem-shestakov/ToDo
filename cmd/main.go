@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/artem-shestakov/to-do/internal/config"
 	"github.com/artem-shestakov/to-do/internal/handler"
 	"github.com/artem-shestakov/to-do/internal/repository"
@@ -30,6 +32,19 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Can't ping database: %s", err)
 	}
+
+	repository.RunDBMigration(
+		"file://migrations",
+		fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+			config.Database.Username,
+			config.Database.Password,
+			config.Database.Address,
+			config.Database.Port,
+			config.Database.DBName,
+		),
+		logger,
+	)
+
 	repo := repository.NewRepository(db)
 	service := service.NewService(repo)
 	handler := handler.NewHadler(service, logger, config.APIToken)
