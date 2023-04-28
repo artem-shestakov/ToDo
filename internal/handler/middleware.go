@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,38 +26,6 @@ func (h *Handler) checkAppToken() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-	}
-}
-
-func (h *Handler) authMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get Authorization token
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			err := errors.New("authorization header was not found in request")
-			h.responseError(c, http.StatusUnauthorized, err, "Header Authorization is not found")
-			c.Abort()
-			return
-		}
-
-		// Get token
-		bearerToken := strings.Split(authHeader, " ")
-		if len(bearerToken) != 2 {
-			err := errors.New("incorrect Bearer token format")
-			h.responseError(c, http.StatusUnauthorized, err, "Can't get Bearer token from header")
-			c.Abort()
-			return
-		}
-
-		// Parse token
-		userID, err := h.service.Auth.ParseToken(bearerToken[1])
-		if err != nil {
-			h.responseError(c, http.StatusUnauthorized, err, "Token parsing error")
-			c.Abort()
-			return
-		}
-		// Set context var
-		c.Set("userId", userID)
 	}
 }
 

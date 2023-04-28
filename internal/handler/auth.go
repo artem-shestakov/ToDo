@@ -7,11 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type loginInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type userId struct {
 	UserId int `json:"user_id"`
 }
