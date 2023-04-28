@@ -7,31 +7,29 @@ import (
 )
 
 type Handler struct {
-	service *service.Service
-	logger  *logrus.Logger
+	service   *service.Service
+	logger    *logrus.Logger
+	api_token string
 }
 
-func responseError(c *gin.Context, code int, err error) {
-	c.JSON(code, gin.H{
-		"error": err.Error(),
-	})
-}
-
-func NewHadler(service *service.Service, logger *logrus.Logger) *Handler {
+func NewHadler(service *service.Service, logger *logrus.Logger, api_token string) *Handler {
 	return &Handler{
-		service: service,
-		logger:  logger,
+		service:   service,
+		logger:    logger,
+		api_token: api_token,
 	}
 }
 
 func (h *Handler) InitRouters() *gin.Engine {
 	router := gin.New()
+	router.Use(h.Logger())
+	router.Use(h.checkAppToken())
 
 	// Auth group
 	auth := router.Group("/auth")
 	{
 		auth.POST("/sign-up", h.SignUp)
-		auth.POST("/login", h.Login)
+		auth.POST("/get-user", h.GetUser)
 	}
 
 	// API v1 group
@@ -57,4 +55,17 @@ func (h *Handler) InitRouters() *gin.Engine {
 	}
 
 	return router
+}
+
+func (h *Handler) responseError(c *gin.Context, code int, err error, detail string) {
+	// Log
+	h.logger.WithFields(logrus.Fields{
+		"err": err.Error(),
+	}).Errorf(detail)
+
+	// Error response
+	c.JSON(code, gin.H{
+		"error":  err.Error(),
+		"detail": detail,
+	})
 }

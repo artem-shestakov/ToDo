@@ -5,25 +5,23 @@ import (
 
 	"github.com/artem-shestakov/to-do/internal/models"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
+
+type userId struct {
+	UserId int `json:"user_id"`
+}
 
 func (h *Handler) SignUp(c *gin.Context) {
 	var json models.User
 	if err := c.ShouldBindJSON(&json); err != nil {
-		responseError(c, http.StatusBadRequest, err)
-		h.logger.WithFields(logrus.Fields{
-			"err": err.Error(),
-		}).Errorf("JSON parsing error")
+		h.responseError(c, http.StatusBadRequest, err, "JSON parsing error")
+
 		return
 	}
 
 	id, err := h.service.Auth.CreateUser(json)
 	if err != nil {
-		responseError(c, http.StatusInternalServerError, err)
-		h.logger.WithFields(logrus.Fields{
-			"err": err.Error(),
-		}).Errorf("User is not created")
+		h.responseError(c, http.StatusInternalServerError, err, "User is not created")
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
@@ -32,6 +30,21 @@ func (h *Handler) SignUp(c *gin.Context) {
 
 }
 
-func (h *Handler) Login(c *gin.Context) {
+func (h *Handler) GetUser(c *gin.Context) {
+	var json userId
+	if err := c.ShouldBindJSON(&json); err != nil {
+		h.responseError(c, http.StatusBadRequest, err, "JSON parsing error")
+
+		return
+	}
+
+	user, err := h.service.Auth.GetUser(json.UserId)
+	if err != nil {
+		h.responseError(c, http.StatusNotFound, err, "user is not found")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
 
 }
