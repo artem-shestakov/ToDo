@@ -48,24 +48,3 @@ func (h *Handler) GetUser(c *gin.Context) {
 	})
 
 }
-
-// func (h *Handler) Login(c *gin.Context) {
-// 	var login loginInput
-// 	if err := c.ShouldBindJSON(&login); err != nil {
-// 		h.responseError(c, http.StatusBadRequest, err, "JSON parsing error")
-// 		return
-// 	}
-
-// 	token, err := h.service.Auth.GenerateToken(login.Email, login.Password)
-// 	if err != nil && err == sql.ErrNoRows {
-// 		err = fmt.Errorf("user %s not found or email/password incorrect", login.Email)
-// 		h.responseError(c, http.StatusUnauthorized, err, fmt.Sprintf("Can't authoririze user: %s", login.Email))
-// 		return
-// 	} else if err != nil {
-// 		h.responseError(c, http.StatusUnauthorized, err, fmt.Sprintf("Can't authoririze user: %s", login.Email))
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, gin.H{
-// 		"token": token,
-// 	})
-// }

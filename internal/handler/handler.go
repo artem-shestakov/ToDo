@@ -12,11 +12,11 @@ type Handler struct {
 	api_token string
 }
 
-func NewHadler(service *service.Service, logger *logrus.Logger) *Handler {
+func NewHadler(service *service.Service, logger *logrus.Logger, api_token string) *Handler {
 	return &Handler{
 		service:   service,
 		logger:    logger,
-		api_token: "api_token",
+		api_token: api_token,
 	}
 }
 
