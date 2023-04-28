@@ -27,21 +27,21 @@ func (r *ListRepository) Create(userId int, list models.ToDoList) (int, error) {
 
 	// Create list query
 	var listId int
-	createListQuery := fmt.Sprintf("INSERT INTO %s (title, description) VALUES ($1, $2) RETURNING id", listsTable)
-	row := tx.QueryRow(createListQuery, list.Title, list.Description)
+	createListQuery := fmt.Sprintf("INSERT INTO %s (title, description, user_id) VALUES ($1, $2, $3) RETURNING id", listsTable)
+	row := tx.QueryRow(createListQuery, list.Title, list.Description, userId)
 	err = row.Scan(&listId)
 	if err != nil {
 		tx.Rollback()
 		return 0, err
 	}
 
-	// Add row into users_lists table
-	createUserListQuery := fmt.Sprintf("INSERT INTO %s (user_id, list_id) VALUES ($1, $2)", usersListTable)
-	_, err = tx.Exec(createUserListQuery, userId, listId)
-	if err != nil {
-		tx.Rollback()
-		return 0, err
-	}
+	// // Add row into users_lists table
+	// createUserListQuery := fmt.Sprintf("INSERT INTO %s (user_id, list_id) VALUES ($1, $2)", usersListTable)
+	// _, err = tx.Exec(createUserListQuery, userId, listId)
+	// if err != nil {
+	// 	tx.Rollback()
+	// 	return 0, err
+	// }
 
 	return listId, tx.Commit()
 }
@@ -49,7 +49,8 @@ func (r *ListRepository) Create(userId int, list models.ToDoList) (int, error) {
 func (r *ListRepository) GetLists(userId int) ([]models.ToDoList, error) {
 	var lists []models.ToDoList
 
-	query := fmt.Sprintf("SELECT l.* FROM %s l INNER JOIN %s ul on l.id = ul.list_id WHERE ul.user_id = $1", listsTable, usersListTable)
+	// query := fmt.Sprintf("SELECT l.* FROM %s l INNER JOIN %s ul on l.id = ul.list_id WHERE ul.user_id = $1", listsTable, usersListTable)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id = $1", listsTable)
 	err := r.db.Select(&lists, query, userId)
 	return lists, err
 }
@@ -57,8 +58,17 @@ func (r *ListRepository) GetLists(userId int) ([]models.ToDoList, error) {
 func (r *ListRepository) GetListById(userId, listId int) (models.ToDoList, error) {
 	var list models.ToDoList
 
-	query := fmt.Sprintf("SELECT l.* FROM %s l INNER JOIN %s ul on l.id = ul.list_id WHERE ul.user_id = $1 AND ul.list_id = $2", listsTable, usersListTable)
+	// query := fmt.Sprintf("SELECT l.* FROM %s l INNER JOIN %s ul on l.id = ul.list_id WHERE ul.user_id = $1 AND ul.list_id = $2", listsTable, usersListTable)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id = $1 AND id = $2", listsTable)
 	err := r.db.Get(&list, query, userId, listId)
+	return list, err
+}
+
+func (r *ListRepository) GetListByTitle(userId int, listTitle string) (models.ToDoList, error) {
+	var list models.ToDoList
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id = $1 AND title = $2", listsTable)
+	err := r.db.Get(&list, query, userId, listTitle)
 	return list, err
 }
 
@@ -81,21 +91,14 @@ func (r *ListRepository) UpdateList(userId, listId int, list models.UpdateToDoLi
 	}
 	setsQuery := strings.Join(sets, ", ")
 
-	query := fmt.Sprintf("UPDATE %s l SET %s FROM %s ul WHERE l.id = ul.list_id AND ul.user_id = $%d AND ul.list_id = $%d",
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE user_id = $%d AND id = $%d",
 		listsTable,
 		setsQuery,
-		usersListTable,
 		argID,
 		argID+1,
 	)
 
-	fmt.Printf("UPDATE %s l SET %s FROM %s ul WHERE l.id = ul.list_id AND ul.user_id = $%d AND ul.list_id = $%d",
-		listsTable,
-		setsQuery,
-		usersListTable,
-		argID,
-		argID+1,
-	)
+	fmt.Println(query)
 
 	args = append(args, userId, listId)
 	result, err := r.db.Exec(query, args...)
@@ -125,7 +128,7 @@ func (r *ListRepository) UpdateList(userId, listId int, list models.UpdateToDoLi
 }
 
 func (r *ListRepository) DeleteList(userId, listId int) error {
-	query := fmt.Sprintf("DELETE FROM %s l USING %s ul WHERE l.id = ul.list_id AND ul.user_id = $1 AND ul.list_id = $2", listsTable, usersListTable)
+	query := fmt.Sprintf("DELETE FROM %s WHERE user_id = $1 AND id = $2", listsTable)
 	result, err := r.db.Exec(query, userId, listId)
 	if err != nil {
 		return err

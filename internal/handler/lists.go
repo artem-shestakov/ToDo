@@ -19,7 +19,6 @@ func (h *Handler) GetLists(c *gin.Context) {
 		h.responseError(c, http.StatusUnauthorized, err, "user token is not valid")
 		return
 	}
-
 	lists, err := h.service.ToDoList.GetLists(user_id)
 	if err != nil {
 		h.responseError(c, http.StatusInternalServerError, err, fmt.Sprintf("can't get lists of user id %d", user_id))
@@ -77,6 +76,13 @@ func (h *Handler) CreateList(c *gin.Context) {
 			err = errors.New("request body is empty")
 		}
 		h.responseError(c, http.StatusBadRequest, err, "json parsing error")
+		return
+	}
+
+	// Chck uniq list title
+	_, err = h.service.ToDoList.GetListByTitle(user_id, list.Title)
+	if err == nil {
+		h.responseError(c, http.StatusBadRequest, fmt.Errorf("list with title %s already exists", list.Title), "can't create list")
 		return
 	}
 
