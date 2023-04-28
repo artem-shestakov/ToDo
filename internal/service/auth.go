@@ -33,12 +33,11 @@ func NewAuthService(repo *repository.Repository) *AuthService {
 }
 
 func (s *AuthService) CreateUser(user models.User) (int, error) {
-	user.Password = s.passwordHash(user.Password)
 	return s.repo.Auth.CreateUser(user)
 }
 
-func (s *AuthService) GetUser(email, password string) (models.User, error) {
-	return s.repo.Auth.GetUser(email, password)
+func (s *AuthService) GetUser(user_id int) (models.User, error) {
+	return s.repo.Auth.GetUser(user_id)
 }
 
 func (s *AuthService) passwordHash(password string) string {
@@ -47,21 +46,21 @@ func (s *AuthService) passwordHash(password string) string {
 	return fmt.Sprintf("%x", hash.Sum([]byte(salt)))
 }
 
-func (s *AuthService) GenerateToken(email, password string) (string, error) {
-	user, err := s.GetUser(email, s.passwordHash(password))
-	if err != nil {
-		return "", err
-	}
-	claims := customClaims{
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(jwtTTL).Unix(),
-			IssuedAt:  time.Now().Unix(),
-		},
-		user.ID,
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(signingKey))
-}
+// func (s *AuthService) GenerateToken(email, password string) (string, error) {
+// 	user, err := s.GetUser(email, s.passwordHash(password))
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	claims := customClaims{
+// 		jwt.StandardClaims{
+// 			ExpiresAt: time.Now().Add(jwtTTL).Unix(),
+// 			IssuedAt:  time.Now().Unix(),
+// 		},
+// 		user.ID,
+// 	}
+// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+// 	return token.SignedString([]byte(signingKey))
+// }
 
 func (s *AuthService) ParseToken(tokenString string) (int, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &customClaims{}, func(token *jwt.Token) (interface{}, error) {

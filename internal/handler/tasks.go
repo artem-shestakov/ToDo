@@ -16,7 +16,7 @@ func (h *Handler) GetUserList(c *gin.Context) (int, int, error) {
 	// Check user and list list
 	user_id, err := h.GetUserID(c)
 	if err != nil {
-		h.responseError(c, http.StatusUnauthorized, err, "user token is not valid")
+		h.responseError(c, http.StatusUnauthorized, err, "user id is not valid")
 		return 0, 0, err
 	}
 

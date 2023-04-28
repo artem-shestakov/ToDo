@@ -13,7 +13,7 @@ const (
 
 type Auth interface {
 	CreateUser(user models.User) (int, error)
-	GetUser(email, password string) (models.User, error)
+	GetUser(user_id int) (models.User, error)
 }
 
 type ToDoList interface {
