@@ -3,23 +3,24 @@ package config
 import (
 	"os"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
 
 type Config struct {
 	Server struct {
-		Address string `yaml:"address"`
-		Port    string `yaml:"port"`
+		Address string `yaml:"address" envconfig:"SERVER_ADDRESS"`
+		Port    string `yaml:"port" envconfig:"SERVER_PORT"`
 	} `yaml:"server"`
 	Database struct {
-		Address  string `yaml:"address"`
-		Port     string `yaml:"port"`
-		Username string `yaml:"username"`
-		Password string `yaml:"password"`
-		DBName   string `yaml:"db_name"`
+		Address  string `yaml:"address" envconfig:"DB_ADDRESS"`
+		Port     string `yaml:"port" envconfig:"DB_PORT"`
+		Username string `yaml:"username" envconfig:"DB_USER"`
+		Password string `yaml:"password" envconfig:"DB_PASS"`
+		DBName   string `yaml:"db_name" envconfig:"DB_NAME"`
 	} `yaml:"database"`
-	APIToken string `yaml:"api_token"`
+	APIToken string `yaml:"api_token" envconfig:"API_TOKEN"`
 }
 
 func ReadConfig(path string, logger *logrus.Logger) (*Config, error) {
@@ -42,4 +43,12 @@ func ReadConfig(path string, logger *logrus.Logger) (*Config, error) {
 		return nil, err
 	}
 	return &cfg, nil
+}
+
+func ReadEnv(cfg *Config) error {
+	err := envconfig.Process("", cfg)
+	if err != nil {
+		return err
+	}
+	return nil
 }

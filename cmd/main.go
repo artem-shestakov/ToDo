@@ -16,17 +16,22 @@ var logger = logrus.New()
 func main() {
 	logger.SetFormatter(&logrus.JSONFormatter{})
 
-	config, err := config.ReadConfig("./config.yaml", logger)
+	conf, err := config.ReadConfig("./config.yaml", logger)
 	if err != nil {
 		logger.Fatalf("Config read error")
 	}
+	if err = config.ReadEnv(conf); err != nil {
+		logger.WithFields(logrus.Fields{
+			"err": err.Error(),
+		}).Fatalf("Can't parse config file")
+	}
 
 	db, err := repository.NewPgsqlDB(repository.Config{
-		Address:  config.Database.Address,
-		Port:     config.Database.Port,
-		User:     config.Database.Username,
-		Password: config.Database.Password,
-		DBName:   config.Database.DBName,
+		Address:  conf.Database.Address,
+		Port:     conf.Database.Port,
+		User:     conf.Database.Username,
+		Password: conf.Database.Password,
+		DBName:   conf.Database.DBName,
 		SSLMode:  "disable",
 	})
 	if err != nil {
@@ -36,20 +41,20 @@ func main() {
 	repository.RunDBMigration(
 		"file://migrations",
 		fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-			config.Database.Username,
-			config.Database.Password,
-			config.Database.Address,
-			config.Database.Port,
-			config.Database.DBName,
+			conf.Database.Username,
+			conf.Database.Password,
+			conf.Database.Address,
+			conf.Database.Port,
+			conf.Database.DBName,
 		),
 		logger,
 	)
 
 	repo := repository.NewRepository(db)
 	service := service.NewService(repo)
-	handler := handler.NewHadler(service, logger, config.APIToken)
+	handler := handler.NewHadler(service, logger, conf.APIToken)
 	server := server.NewServer(logger)
-	if err := server.Run(config.Server.Address, config.Server.Port, handler.InitRouters()); err != nil {
+	if err := server.Run(conf.Server.Address, conf.Server.Port, handler.InitRouters()); err != nil {
 		logger.Fatalf("Can't run server. Got error: %s", err.Error())
 	}
 }
