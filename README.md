@@ -14,6 +14,7 @@ This app is using [Telegram bot](https://github.com/artem-shestakov/ToDo-Telegra
   | DB_PASS | Database password
   | DB_NAME | Database name
   | API_TOKEN |  API token to comunicate between telegram bot and this app
+  
   or configuration file in `YAML` format. Example:
   ```yaml
   # app params
