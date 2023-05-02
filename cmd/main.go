@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/artem-shestakov/to-do/internal/config"
@@ -11,12 +12,20 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var logger = logrus.New()
+var (
+	confPath *string
+	logger   = logrus.New()
+)
+
+func init() {
+	confPath = flag.String("config", "config.yaml", "Path to configuration file")
+}
 
 func main() {
+	flag.Parse()
 	logger.SetFormatter(&logrus.JSONFormatter{})
 
-	conf, err := config.ReadConfig("./config.yaml", logger)
+	conf, err := config.ReadConfig(*confPath, logger)
 	if err != nil {
 		logger.Fatalf("Config read error")
 	}

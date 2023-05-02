@@ -24,7 +24,7 @@ type Config struct {
 }
 
 func ReadConfig(path string, logger *logrus.Logger) (*Config, error) {
-	f, err := os.Open("config.yml")
+	f, err := os.Open(path)
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"err": err.Error(),
